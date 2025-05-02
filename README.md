@@ -1,5 +1,9 @@
 ## Run Project
 
+### Requirement
+
+- copy `.env.example` in new file `.env`
+
 ### Run Daemon
 
 use make

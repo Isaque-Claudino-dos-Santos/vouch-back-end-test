@@ -13,13 +13,14 @@ readonly class Database
 
     public function __construct()
     {
+        $env = parse_ini_file('.env');
 
-        $this->driver = 'mysql';
-        $this->host = 'localhost';
-        $this->user = 'test';
-        $this->pass = 'Test@123';
-        $this->database = 'vouch';
-        $this->port = 3306;
+        $this->driver = $env['DB_DRIVER'] ?? 'mysql';
+        $this->host = $env['DB_HOST'] ?? '127.0.0.1';
+        $this->user = $env['DB_USER'] ?? 'root';
+        $this->pass = $env['DB_PASS'] ?? 'root';
+        $this->database = $env['DB_NAME'] ?? 'vouch';
+        $this->port = $env['DB_PORT'] ?? 3306;
     }
 
     private function getDNS(): string
