@@ -3,11 +3,13 @@
 
 require_once '../autoload.php';
 
-use Lib\MsgQueue;
+use Lib\{MsgQueue, Env};
 use Constants\MsgTypeEnum;
 
 
-$queue = new MsgQueue(123);
+$env = new Env('../.env');
+$queueKey = $env->get('QUEUE_KEY');
+$queue = new MsgQueue($queueKey);
 
 function indexController(): void
 {
@@ -24,7 +26,7 @@ function sendController(): void
 
     $message = $_POST['message'] ?? '';
 
-    $queue->sendStr(MsgTypeEnum::SAVE_MESSAGE, $message);
+    $queue->ifValidSendStr(MsgTypeEnum::SAVE_MESSAGE, $message);
 
     header('Location: /');
 }

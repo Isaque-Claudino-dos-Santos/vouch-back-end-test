@@ -1,8 +1,11 @@
 <?php
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
 
 require_once __DIR__ . '/autoload.php';
 
-use \Lib\{Database, MsgQueue};
+use \Lib\{Database, MsgQueue, Env};
 use \Models\Message;
 use \Constants\MsgTypeEnum;
 
@@ -17,27 +20,27 @@ const CREATE_TABLE_SQL = <<<SQL
         )
 SQL;
 
-$queue = new MsgQueue(123);
-$pdo = new Database()->connect();
+$env = new Env('.env');
+$queueKey = $env->get('QUEUE_KEY');
+$queue = new MsgQueue($queueKey);
+$pdo = new Database($env)->connect();
 
 $pdo->exec(CREATE_TABLE_SQL);
 
 while (true) {
-    $message = $queue->anywhereReceiveStr($receivedMsgType);
+    $message = $queue->receiveStr(MsgTypeEnum::SAVE_MESSAGE, 0);
 
-    if ($receivedMsgType === MsgTypeEnum::SAVE_MESSAGE) {
-        if (!$message) {
-            continue;
-        }
-
-        $alreadyExistsMessage = Message::messageExists($pdo, $message);
-
-        if ($alreadyExistsMessage) {
-            $queue->sendStr(MsgTypeEnum::FEEDBACK, "Message already send");
-            continue;
-        }
-
-        Message::save($pdo, $message);
-        $queue->sendStr(MsgTypeEnum::FEEDBACK, "Message sent");
+    if (!$message) {
+        continue;
     }
+
+    $alreadyExistsMessage = Message::messageExists($pdo, $message);
+
+    if ($alreadyExistsMessage) {
+        $queue->ifValidSendStr(MsgTypeEnum::FEEDBACK, "Message already send");
+        continue;
+    }
+
+    Message::save($pdo, $message);
+    $queue->ifValidSendStr(MsgTypeEnum::FEEDBACK, "Message sent");
 }

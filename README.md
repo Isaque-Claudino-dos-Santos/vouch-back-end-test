@@ -3,6 +3,7 @@
 ### Requirement
 
 - copy `.env.example` in new file `.env`
+- configure `DB_*` variables
 
 ### Run Daemon
 
