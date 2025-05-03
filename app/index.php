@@ -1,7 +1,7 @@
 <?php
 
 
-require_once '../autoload.php';
+require_once dirname(__DIR__) . '/autoload.php';
 
 use Lib\{MsgQueue, Env, Route};
 use app\Controller;
