@@ -3,81 +3,51 @@
 
 require_once '../autoload.php';
 
-use Lib\{MsgQueue, Env};
-use Constants\MsgTypeEnum;
+use Lib\{MsgQueue, Env, Route};
+use app\Controller;
 
 
 readonly class Application
 {
-    public Env $env;
-    public int $queueKey;
-    public MsgQueue $queue;
 
-    public function __construct()
+    public function __construct(
+        private Controller $controller,
+    )
     {
-        $this->env = new Env('../.env');
-        $this->queueKey = $this->env->get('QUEUE_KEY');
-        $this->queue = new MsgQueue($this->queueKey);
     }
 
-    private function indexController(): void
+    private function callRouteRequested(array $routes): void
     {
-        $message = $this->queue->receiveStr(MsgTypeEnum::FEEDBACK, MSG_IPC_NOWAIT);
-
-        require __DIR__ . '/form_page.php';
-    }
-
-
-    private function sendController(): void
-    {
-        $message = $_POST['message'] ?? '';
-
-        $this->queue->ifValidSendStr(MsgTypeEnum::SAVE_MESSAGE, $message);
-
-        header('Location: /');
-    }
-
-    private function callRouteActionByRequest(array $routes): void
-    {
-        foreach ($routes[$_SERVER['REQUEST_METHOD']] as $route) {
-            if ($_SERVER['REQUEST_URI'] !== $route['path']) {
-                continue;
+        /** @var Route $route */
+        foreach ($routes as $route) {
+            if ($route->wasRequested()) {
+                $route->callAction();
+                break;
             }
-
-            call_user_func($route['action']);
-            break;
         }
     }
 
     public function main(): void
     {
-
-        $getRoutes = [
-            [
-                'path' => '/',
-                'action' => fn() => $this->indexController()
-            ]
-        ];
-
-        $postRoutes = [
-            [
-                'path' => '/send',
-                'action' => fn() => $this->sendController()
-            ]
-        ];
-
         $routes = [
-            'GET' => $getRoutes,
-            'POST' => $postRoutes
+            new Route('/', 'GET', [$this->controller, 'sendMessageForm']),
+            new Route('/send', 'POST', [$this->controller, 'sendMessage']),
         ];
 
 
-        $this->callRouteActionByRequest($routes);
+        $this->callRouteRequested($routes);
     }
 }
 
 try {
-    new Application()->main();
+    $env = new Env('../.env');
+    $queueKey = $env->get('QUEUE_KEY');
+    $queue = new MsgQueue($queueKey);
+    $controller = new Controller($queue);
+
+    $app = new Application($controller);
+
+    $app->main();
 } catch (\Throwable $exception) {
     echo $exception->getMessage();
     die(0);

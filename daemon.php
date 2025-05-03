@@ -17,36 +17,23 @@ const CREATE_MESSAGES_TABLE_SCHEMA = <<<SQL
     )
 SQL;
 
-
-$queueKeyFromArg = $argv[1] ?? null;
-
 class Daemon
 {
-    private readonly Env $env;
-    private readonly MsgQueue $queue;
-    private readonly PDO $pdo;
-    private readonly Message $messageModel;
     private bool $processStop = false;
-    private int $queueKey;
 
-    public function __construct()
+    public function __construct(
+        private readonly MsgQueue $queue,
+        private readonly PDO      $pdo,
+        private readonly Message  $messageModel,
+    )
     {
-        global $queueKeyFromArg;
-
-        $this->env = new Env('.env');
-        $this->queueKey = $queueKeyFromArg ?? $this->env->get('QUEUE_KEY');
-        $this->queue = new MsgQueue($this->queueKey);
-        $this->pdo = new Database($this->env)->connect();
-        $this->messageModel = new Message();
     }
 
     private function start(): void
     {
         echo "\n --- Daemon Started ---\n";
 
-        if ($this->queue->exists()) {
-            echo "\n - Started queue \"{$this->queueKey}\" successfully";
-        }
+        echo "\n - Started queue \"{$this->queue->key}\" successfully";
 
         $this->pdo->exec(CREATE_MESSAGES_TABLE_SCHEMA);
 
@@ -61,12 +48,12 @@ class Daemon
             return;
         }
 
-        if ($this->messageModel->messageExists($this->pdo, $messageToSave)) {
+        if ($this->messageModel->messageExists($messageToSave)) {
             $this->queue->ifValidSendStr(MsgTypeEnum::FEEDBACK, "Message already send");
             return;
         }
 
-        $message = $this->messageModel->save($this->pdo, $messageToSave);
+        $message = $this->messageModel->save($messageToSave);
 
         $this->queue->ifValidSendStr(MsgTypeEnum::FEEDBACK, "Message sent");
 
@@ -90,7 +77,6 @@ class Daemon
     {
         $this->start();
 
-
         do {
             if ($this->processStop) break;
 
@@ -103,7 +89,15 @@ class Daemon
 
 
 try {
-    new Daemon()->main();
+    $env = new Env('.env');
+    $queueKey = ($argv[1] ?? null) ?? $this->env->get('QUEUE_KEY');
+    $queue = new MsgQueue($queueKey);
+    $pdo = new Database($env)->connect();
+    $messageModel = new Message($pdo);
+
+    $daemon = new Daemon($queue, $pdo, $messageModel);
+
+    $daemon->main();
 } catch (Throwable $e) {
     echo "\n" . $e->getMessage() . "\n";
     exit(0);

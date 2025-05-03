@@ -11,9 +11,15 @@ class Message
     public string $createdAt;
     public string $updatedAt;
 
+    public function __construct(
+        private readonly PDO $pdo
+    )
+    {
+    }
+
     private function makeFromRow(array $row): Message
     {
-        $message = new Message();
+        $message = new Message($this->pdo);
         $message->id = $row['id'];
         $message->value = $row['value'];
         $message->createdAt = $row['created_at'];
@@ -21,10 +27,10 @@ class Message
         return $message;
     }
 
-    public function findByValue(PDO $pdo, string $value): Message|null
+    public function findByValue(string $value): Message|null
     {
         $sql = "SELECT * FROM messages WHERE value = :value";
-        $stmt = $pdo->prepare($sql);
+        $stmt = $this->pdo->prepare($sql);
         $stmt->bindParam(':value', $value);
         $stmt->execute();
         $fetch = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -36,20 +42,20 @@ class Message
         return $this->makeFromRow($fetch[0]);
     }
 
-    public function save(PDO $pdo, string $message): Message|null
+    public function save(string $message): Message|null
     {
         $sql = "INSERT INTO messages (value) VALUES (:value)";
-        $stmt = $pdo->prepare($sql);
+        $stmt = $this->pdo->prepare($sql);
         $stmt->bindParam(':value', $message);
         $stmt->execute();
 
-        return $this->findByValue($pdo, $message);
+        return $this->findByValue($message);
     }
 
-    public function messageExists(PDO $pdo, string $message): bool
+    public function messageExists(string $message): bool
     {
         $sql = "SELECT COUNT(*) FROM messages WHERE value = :value";
-        $stmt = $pdo->prepare($sql);
+        $stmt = $this->pdo->prepare($sql);
         $stmt->bindParam(':value', $message);
         $stmt->execute();
         $count = $stmt->fetchColumn();
