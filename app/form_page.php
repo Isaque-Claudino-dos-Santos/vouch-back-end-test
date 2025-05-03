@@ -1,5 +1,6 @@
 <?php
 /** @var string|null $message */
+
 ?>
 
 <!doctype html>
@@ -22,7 +23,11 @@
     <button type="submit">SEND</button>
 </form>
 
+<?php if (!empty($message)): ?>
+    <div><?= $message ?></div>
+<?php else: ?>
+    <div>No messages ...</div>
+<?php endif; ?>
 
-<div><?= $message ?? 'not found' ?></div>
 </body>
 </html>

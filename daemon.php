@@ -53,8 +53,7 @@ class Daemon
         echo "\n - Create table \"messages\" if not exists table. \n\n";
     }
 
-
-    private function process(): void
+    private function handleSaveMessage(): void
     {
         $messageToSave = $this->queue->receiveStr(MsgTypeEnum::SAVE_MESSAGE);
 
@@ -62,9 +61,7 @@ class Daemon
             return;
         }
 
-        $alreadyExistsMessage = $this->messageModel->messageExists($this->pdo, $messageToSave);
-
-        if ($alreadyExistsMessage) {
+        if ($this->messageModel->messageExists($this->pdo, $messageToSave)) {
             $this->queue->ifValidSendStr(MsgTypeEnum::FEEDBACK, "Message already send");
             return;
         }
@@ -78,8 +75,15 @@ class Daemon
         echo " - message saved - {$message->id} - {$timestamp} \n";
     }
 
+
+    private function process(): void
+    {
+        $this->handleSaveMessage();
+    }
+
     private function finish(): void
     {
+        echo "\n --- Daemon Finished ---\n";
     }
 
     public function main(): void
