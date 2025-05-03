@@ -4,8 +4,8 @@
 
 - copy `.env.example` in new file `.env`
 - configure `DB_*` variables
-
-### Run Daemon
+ 
+### Run Daemon ![](doc/icons/terminal.svg)
 
 use make
 
