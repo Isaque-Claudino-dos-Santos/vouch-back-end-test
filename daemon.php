@@ -20,7 +20,6 @@ SQL;
 
 $queueKeyFromArg = $argv[1] ?? null;
 
-
 class Daemon
 {
     private readonly Env $env;
@@ -32,6 +31,8 @@ class Daemon
 
     public function __construct()
     {
+        global $queueKeyFromArg;
+
         $this->env = new Env('.env');
         $this->queueKey = $queueKeyFromArg ?? $this->env->get('QUEUE_KEY');
         $this->queue = new MsgQueue($this->queueKey);
@@ -73,7 +74,8 @@ class Daemon
         $this->queue->ifValidSendStr(MsgTypeEnum::FEEDBACK, "Message sent");
 
         $timestamp = date('d/m/y H:i:s', time());
-        echo "- message saved - {$message->id} - {$timestamp} \n";
+
+        echo " - message saved - {$message->id} - {$timestamp} \n";
     }
 
     private function finish(): void
@@ -99,7 +101,7 @@ class Daemon
 try {
     new Daemon()->main();
 } catch (Throwable $e) {
-    echo $e->getMessage();
+    echo "\n" . $e->getMessage() . "\n";
     exit(0);
 }
 

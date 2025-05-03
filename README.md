@@ -10,13 +10,13 @@
 use make
 
 ```bash
-  make start-daemon
+  make start-daemon QUEUE=123
 ```
 
 or use
 
 ```bash
-    php ./daemon.php
+    php ./daemon.php 123
 ```
 
 ### Run App
@@ -24,7 +24,7 @@ or use
 use make
 
 ````bash
-    make start-app
+    make start-app QUEUE=123
 ````
 
 ````bash
