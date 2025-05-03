@@ -11,7 +11,7 @@ class Message
     public string $created_at;
     public string $updated_at;
 
-    public static function save(PDO $pdo, string $message): void
+    public function save(PDO $pdo, string $message): void
     {
         $sql = "INSERT INTO messages (value) VALUES (:value)";
         $stmt = $pdo->prepare($sql);
@@ -19,7 +19,7 @@ class Message
         $stmt->execute();
     }
 
-    public static function messageExists(PDO $pdo, string $message): bool
+    public function messageExists(PDO $pdo, string $message): bool
     {
         $sql = "SELECT COUNT(*) FROM messages WHERE value = :value";
         $stmt = $pdo->prepare($sql);

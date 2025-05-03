@@ -5,4 +5,3 @@ start-app:
 start-daemon:
 	clear
 	php ./daemon.php
-
