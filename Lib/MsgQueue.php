@@ -74,4 +74,9 @@ class MsgQueue
     {
         msg_remove_queue($this->queue);
     }
+
+    public function exists(): bool
+    {
+        return msg_queue_exists($this->key);
+    }
 }

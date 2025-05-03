@@ -4,4 +4,4 @@ start-app:
 
 start-daemon:
 	clear
-	php ./daemon.php
+	php ./daemon.php $(QUEUE)
