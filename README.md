@@ -4,7 +4,8 @@
 
 - copy `.env.example` in new file `.env`
 - configure `DB_*` variables
- 
+- configure default `QUEUE_KEY` in `.env`
+
 ### Run Daemon
 
 use make
