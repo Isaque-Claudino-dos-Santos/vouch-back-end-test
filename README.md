@@ -1,3 +1,5 @@
+<img src="https://img.shields.io/badge/PHP-v8.4-blue">
+
 ## Run Project
 
 ### Requirement
